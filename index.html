@@ -84,6 +84,7 @@
             const [selectedRecipe, setSelectedRecipe] = useState(null);
             const [recipeProofMode, setRecipeProofMode] = useState(false);
             const [proofPhotoName, setProofPhotoName] = useState('');
+            const [rewardFilter, setRewardFilter] = useState('Tutti');
 
             const navigateTo = (tab) => {
                 setActiveTab(tab);
@@ -181,6 +182,14 @@
                     setProofPhotoName('');
                 }, 2200);
             };
+
+            const rewardsData = [
+                { id: 1, title: 'Pass ATV giornaliero', category: 'Mobilità', subtitle: 'Mobilità urbana', cost: 800, current: 640, tone: 'green', visual: '🚌' },
+                { id: 2, title: 'Museo Castelvecchio', category: 'Cultura', subtitle: 'Ingresso ridotto', cost: 1000, current: 425, tone: 'gray', visual: '🏰' },
+                { id: 3, title: 'Ridotto Arena', category: 'Cultura', subtitle: 'Evento serale', cost: 1800, current: 425, tone: 'gray', visual: '🏛️' }
+            ];
+
+            const filteredRewards = rewardsData.filter((reward) => rewardFilter === 'Tutti' || reward.category === rewardFilter);
 
             const Header = () => (
                 <div className="bg-white border-b border-gray-100 sticky top-0 z-50">
@@ -371,29 +380,76 @@
                                 </div>
                             </div>
                         ) : activeTab === 'shop' ? (
-                            <div className="p-8 animate-in h-full bg-white">
-                                <h2 className="text-3xl font-black text-[#004C97] mb-8 uppercase tracking-tighter italic leading-tight">Premi</h2>
-                                
+                            <div className="p-4 animate-in h-full bg-[#F3F4F7] overflow-y-auto no-scrollbar">
+                                <div className="pt-2 pb-4 text-center">
+                                    <h2 className="text-5xl font-black text-[#0B3F7A] uppercase tracking-tighter leading-none">Premi</h2>
+                                    <p className="text-[18px] text-[#222222] leading-tight mt-3">Raccogli punti con la tua spesa MyFamila e riscatta premi esclusivi.</p>
+                                </div>
 
-                                <div className="p-6 bg-white border border-gray-100 rounded-3xl shadow-sm">
-                                    <h4 className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-4">Premi disponibili</h4>
-                                    <div className="space-y-3">
-                                        {[
-                                            { title: 'Pass ATV giornaliero', subtitle: 'Mobilità urbana', cost: 800, enabled: points >= 800 },
-                                            { title: 'Museo Castelvecchio', subtitle: 'Ingresso ridotto', cost: 1000, enabled: points >= 1000 },
-                                            { title: 'Ridotto Arena', subtitle: 'Evento serale', cost: 1800, enabled: points >= 1800 }
-                                        ].map((reward, index) => (
-                                            <div key={index} className="rounded-2xl border border-gray-100 p-4 flex items-center justify-between gap-4">
-                                                <div>
-                                                    <p className="text-sm font-black text-[#333333]">{reward.title}</p>
-                                                    <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">{reward.subtitle}</p>
+                                <div className="flex items-center justify-center gap-2 mb-5">
+                                    {['Tutti', 'Mobilità', 'Cultura'].map((chip) => (
+                                        <button
+                                            key={chip}
+                                            type="button"
+                                            onClick={() => setRewardFilter(chip)}
+                                            className={`px-5 py-2.5 rounded-full border text-[12px] font-black transition-all ${rewardFilter === chip ? 'bg-white text-[#111111] border-[#CFCFD5] shadow-sm' : 'bg-[#EFEFF3] text-[#4A4A4A] border-[#D7D7DD]'}`}
+                                        >
+                                            {chip}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                <div className="space-y-4 pb-24">
+                                    {filteredRewards.map((reward) => {
+                                        const clampedCurrent = Math.min(reward.current, reward.cost);
+                                        const pct = Math.round((clampedCurrent / reward.cost) * 100);
+                                        const missing = Math.max(reward.cost - clampedCurrent, 0);
+                                        const enabled = missing === 0 || reward.tone === 'green';
+
+                                        return (
+                                            <div key={reward.id} className="bg-white rounded-[1.7rem] p-3.5 border border-[#E2E3E8] shadow-[0_8px_22px_rgba(0,0,0,0.08)]">
+                                                <div className="flex gap-3">
+                                                    <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-[#A8DBF1] to-[#76C3E8] flex items-center justify-center text-5xl shrink-0">
+                                                        {reward.visual}
+                                                    </div>
+
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-start justify-between gap-2">
+                                                            <div>
+                                                                <p className="text-[18px] leading-tight font-black text-[#191919]">{reward.title}</p>
+                                                                <p className="text-[12px] uppercase tracking-wide text-[#555555] font-bold mt-0.5">{reward.subtitle}</p>
+                                                            </div>
+                                                            <div className={`px-3 py-1 rounded-full text-[13px] font-black whitespace-nowrap ${reward.tone === 'green' ? 'bg-[#2B9B4A] text-white' : 'bg-[#90939C] text-white'}`}>
+                                                                {reward.cost} Punti {reward.tone === 'gray' ? '🔒' : ''}
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="mt-3">
+                                                            <div className="h-2.5 bg-[#DDE0E6] rounded-full overflow-hidden">
+                                                                <div className={`${reward.tone === 'green' ? 'bg-[#2B9B4A]' : 'bg-[#2A2E38]'} h-full`} style={{ width: `${pct}%` }}></div>
+                                                            </div>
+                                                            <div className="mt-2 flex items-center justify-between text-[12px]">
+                                                                <p className="font-black text-[#222222]">{pct}% ({clampedCurrent}/{reward.cost})</p>
+                                                                <p className="text-[#4C4F56] font-semibold">Mancano {missing} punti</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <button className={`px-4 py-2 rounded-full text-[10px] font-black ${reward.enabled ? 'bg-[#004C97] text-white' : 'bg-gray-200 text-gray-400'}`} disabled={!reward.enabled}>
-                                                    {reward.cost}
-                                                </button>
+
+                                                {reward.id === 1 && (
+                                                    <div className="mt-2.5 text-right">
+                                                        <button type="button" className={`text-[13px] font-black ${enabled ? 'text-[#2B9B4A]' : 'text-[#90939C]'}`}>
+                                                            Riscatti ›
+                                                        </button>
+                                                    </div>
+                                                )}
                                             </div>
-                                        ))}
-                                    </div>
+                                        );
+                                    })}
+
+                                    <p className="text-center text-[16px] leading-snug text-[#222222] pt-2">
+                                        Ti mancano solo 160 punti per il tuo prossimo viaggio in bus! Continua a spendere con MyFamila!
+                                    </p>
                                 </div>
                             </div>
                         ) : activeTab === 'profile' ? (
